@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>welcoom</title>
+    <!-- استدعاء مكتبة الرفع من داخل الموقع -->
+    <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
+    
     <style>
         /* التنسيق العام */
         body {
@@ -46,10 +49,6 @@
             transition: border 0.3s;
         }
 
-        input[type="password"]:focus {
-            border-color: #777;
-        }
-
         button {
             background: #1a1a1a;
             color: #888;
@@ -89,12 +88,6 @@
             margin-bottom: 50px;
         }
 
-        .header h1 {
-            font-size: 2.5rem;
-            color: #fff;
-            margin-bottom: 10px;
-        }
-
         .gallery {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -105,6 +98,7 @@
             overflow: hidden;
             border: 1px solid #1a1a1a;
             background: #000;
+            height: 350px; /* توحيد الطول */
         }
 
         .gallery img {
@@ -121,7 +115,15 @@
             transform: scale(1.05);
         }
 
-        /* تحسين للموبايل */
+        /* زر الرفع الجديد */
+        #upload-btn {
+            display: block;
+            margin: 20px auto;
+            background: #004d40;
+            color: #fff;
+            border: 1px solid #00796b;
+        }
+
         @media (max-width: 600px) {
             .header h1 { font-size: 1.8rem; }
             #login-screen { width: 80%; padding: 30px; }
@@ -140,38 +142,61 @@
 
     <div id="main-content">
         <div class="header">
-            <h1>اmy potos</h1>
-            <p style="font-style: italic; color: #666;">"اf.girly"</p>
+            <h1>My Photos</h1>
+            <p style="font-style: italic; color: #666;">"f.girly"</p>
+            <!-- زر الرفع يظهر هنا بعد الدخول -->
+            <button id="upload-btn">إضافة صورة جديدة</button>
         </div>
         
-        <div class="gallery">
-            <div class="gallery-item"><img src="1.jpg" alt=" 1"></div>
-            <div class="gallery-item"><img src="2.jpg" alt=" 2"></div>
-            <div class="gallery-item"><img src="3.jpg" alt=" 3"></div>
-            <div class="gallery-item"><img src="4.jpg" alt="p 4"></div>
+        <div class="gallery" id="photo-gallery">
+            <!-- الصور الافتراضية -->
+            <div class="gallery-item"><img src="1.jpg" alt="1"></div>
+            <div class="gallery-item"><img src="2.jpg" alt="2"></div>
+            <div class="gallery-item"><img src="3.jpg" alt="3"></div>
+            <div class="gallery-item"><img src="4.jpg" alt="4"></div>
         </div>
     </div>
 
     <script>
-        // دالة الدخول
+        // 1. إعدادات Cloudinary الخاصة بك
+        const cloudName = "dm6sw4fb1"; 
+        const uploadPreset = "ضـع_هنا_اسم_الـPreset"; // استبدلها بالـ Preset الذي أنشأته (Unsigned)
+
+        // 2. دالة الدخول
         function unlock() {
             const pass = document.getElementById("passInput").value;
-            // كلمة المرور الافتراضية
             if (pass === "f.socity") { 
                 document.getElementById("login-screen").style.display = "none";
                 document.getElementById("main-content").style.display = "block";
                 document.body.style.alignItems = "flex-start";
             } else {
-                alert("oui ckon nya siftli t3rf cod.");
+                alert("كلمة المرور خاطئة.");
             }
         }
 
-        // تشغيل الدخول عند الضغط على Enter
         function handleKeyPress(e) {
-            if (e.key === "Enter") {
-                unlock();
-            }
+            if (e.key === "Enter") unlock();
         }
+
+        // 3. برمجة زر الرفع المباشر
+        var myWidget = cloudinary.createUploadWidget({
+            cloudName: cloudName, 
+            uploadPreset: uploadPreset
+        }, (error, result) => { 
+            if (!error && result && result.event === "success") { 
+                // إضافة الصورة الجديدة للشبكة فوراً
+                const gallery = document.getElementById("photo-gallery");
+                const newItem = document.createElement("div");
+                newItem.className = "gallery-item";
+                newItem.innerHTML = `<img src="${result.info.secure_url}" alt="new photo">`;
+                gallery.prepend(newItem); // إضافتها في البداية
+                alert("تم رفع الصورة بنجاح!");
+            }
+        });
+
+        document.getElementById("upload-btn").addEventListener("click", function(){
+            myWidget.open();
+        }, false);
     </script>
 </body>
 </html>
