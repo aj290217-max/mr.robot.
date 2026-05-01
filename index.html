@@ -1,59 +1,107 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mr. Robot Gallery</title>
+    <title>Mr. Robot Auto-Gallery</title>
     <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
     <style>
-        body { background: #050505; color: #d4d4d4; font-family: serif; text-align: center; margin: 0; }
+        body { background: #050505; color: #eee; font-family: 'Courier New', Courier, monospace; text-align: center; margin: 0; }
         .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; padding: 20px; }
-        .gallery img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 1px solid #1a1a1a; filter: grayscale(100%); transition: 0.5s; }
-        .gallery img:hover { filter: grayscale(0%); }
-        #admin-btn { display: none; margin: 20px; padding: 10px 20px; background: #b71c1c; color: white; border: none; cursor: pointer; }
+        .gallery img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 1px solid #333; filter: grayscale(100%); transition: 0.5s; cursor: pointer; }
+        .gallery img:hover { filter: grayscale(0%); border-color: #b71c1c; }
+        #admin-panel { display: none; padding: 20px; background: #0a0a0a; border-bottom: 1px solid #b71c1c; position: sticky; top: 0; z-index: 100; }
+        button { background: #b71c1c; color: white; border: none; padding: 12px 25px; cursor: pointer; font-weight: bold; border-radius: 4px; }
+        h1 { letter-spacing: 5px; color: #fff; margin-top: 30px; }
     </style>
 </head>
 <body>
 
-    <h1>GALLERY</h1>
-    <!-- الزر سيظهر فقط عند إضافة ?admin=true للرابط -->
-    <button id="admin-btn">➕ ارفع صورة جديدة</button>
+    <div id="admin-panel">
+        <button id="upload-btn">➕ ارفع صورة (تحديث تلقائي)</button>
+    </div>
 
+    <h1>GALLERY</h1>
     <div class="gallery" id="gallery-container"></div>
 
     <script>
-        // --- ضع روابط صورك هنا لكي تظهر في كل الهواتف ---
-        const myImages = [
-            "رابط_الصورة_الأولى",
-            "رابط_الصورة_الثانية"
-        ];
+        // --- بياناتك التي أرسلتها ---
+        const BIN_ID = '69f523dc36566621a815207f';
+        const API_KEY = '$2a$10$u1FBimM8i3NGDzglgr2F6.8Ea3dL8ff4VOWh.4ssOK90oyZltOzbW';
+        const CLOUD_NAME = 'dm6sw4fb1';
+        const UPLOAD_PRESET = 'jalile.mh';
 
-        // عرض الصور للجميع
-        const container = document.getElementById("gallery-container");
-        myImages.reverse().forEach(url => {
-            const img = document.createElement("img");
-            img.src = url;
-            container.appendChild(img);
-        });
-
-        // إظهار زر الرفع للمسؤول
-        if (new URLSearchParams(window.location.search).get('admin') === 'true') {
-            document.getElementById("admin-btn").style.display = "inline-block";
+        // 1. جلب الصور فور فتح الموقع
+        async function fetchPhotos() {
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': API_KEY }
+                });
+                const data = await res.json();
+                // التأكد من وجود القائمة أو إنشاء واحدة فارغة
+                const photos = data.record.photos || [];
+                photos.reverse().forEach(url => displayImage(url));
+            } catch (e) {
+                console.error("خطأ في الاتصال بقاعدة البيانات");
+                // إذا كان الـ Bin فارغاً تماماً، نقوم بتهيئته
+                setupInitialBin();
+            }
         }
 
-        // إعداد الرفع (سيعطيك الرابط لتضعه في الكود)
+        // تهيئة الـ Bin لأول مرة لمنع خطأ "Blank"
+        async function setupInitialBin() {
+            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+                body: JSON.stringify({ photos: [] })
+            });
+        }
+
+        // 2. إرسال الصورة الجديدة للقاعدة
+        async function syncWithDB(newUrl) {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                headers: { 'X-Master-Key': API_KEY }
+            });
+            const data = await res.json();
+            let photos = data.record.photos || [];
+            
+            photos.push(newUrl);
+
+            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+                body: JSON.stringify({ photos: photos })
+            });
+            alert("تم الحفظ! ستظهر الصورة الآن في كل الهواتف.");
+        }
+
+        function displayImage(url) {
+            const img = document.createElement("img");
+            img.src = url;
+            img.onclick = () => window.open(url, '_blank');
+            document.getElementById("gallery-container").prepend(img);
+        }
+
+        // إظهار زر الرفع عند استخدام رابط ?admin=true
+        if (new URLSearchParams(window.location.search).get('admin') === 'true') {
+            document.getElementById("admin-panel").style.display = "block";
+        }
+
+        // نظام الرفع
         const myWidget = cloudinary.createUploadWidget({
-            cloudName: 'dm6sw4fb1', 
-            uploadPreset: 'jalile.mh'
+            cloudName: CLOUD_NAME, uploadPreset: UPLOAD_PRESET
         }, (error, result) => {
             if (!error && result.event === "success") {
                 const url = result.info.secure_url;
-                alert("تم الرفع! انسخ هذا الرابط وضعه في ملف index.html داخل قائمة myImages:\n\n" + url);
+                displayImage(url);
+                syncWithDB(url); // الحفظ التلقائي
             }
         });
 
-        document.getElementById("admin-btn").addEventListener("click", () => myWidget.open());
+        document.getElementById("upload-btn").addEventListener("click", () => myWidget.open());
+        
+        // تشغيل الجلب عند البداية
+        fetchPhotos();
     </script>
 </body>
 </html>
