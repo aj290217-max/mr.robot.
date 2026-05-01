@@ -4,172 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Private Gallery</title>
-    
-    <!-- مكتبة Cloudinary للرفع من داخل الموقع -->
     <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
     
     <style>
-        /* التنسيق العام */
-        body {
-            background-color: #050505;
-            color: #d4d4d4;
-            font-family: 'Times New Roman', Times, serif;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* شاشة القفل */
-        #login-screen {
-            text-align: center;
-            background: #0a0a0a;
-            padding: 50px;
-            border: 1px solid #1a1a1a;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border-radius: 4px;
-            z-index: 100;
-        }
-
-        h2 { letter-spacing: 2px; font-weight: lighter; color: #fff; }
-
-        input[type="password"] {
-            background: #111;
-            border: 1px solid #333;
-            color: white;
-            padding: 12px;
-            margin-top: 20px;
-            text-align: center;
-            width: 200px;
-            outline: none;
-        }
-
-        button {
-            background: #1a1a1a;
-            color: #888;
-            border: 1px solid #333;
-            padding: 10px 30px;
-            margin-top: 20px;
-            cursor: pointer;
-            transition: 0.4s;
-            text-transform: uppercase;
-        }
-
+        body { background-color: #050505; color: #d4d4d4; font-family: 'Times New Roman', serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        
+        /* شاشة القفل للجميع */
+        #login-screen { text-align: center; background: #0a0a0a; padding: 50px; border: 1px solid #1a1a1a; border-radius: 4px; }
+        input[type="password"] { background: #111; border: 1px solid #333; color: white; padding: 12px; margin-top: 20px; text-align: center; width: 200px; outline: none; }
+        button { background: #1a1a1a; color: #888; border: 1px solid #333; padding: 10px 30px; margin-top: 20px; cursor: pointer; transition: 0.4s; }
         button:hover { background: #fff; color: #000; }
 
-        /* محتوى المعرض */
-        #main-content {
-            display: none;
-            width: 90%;
-            max-width: 1200px;
-            padding: 40px 0;
-            animation: fadeIn 1.2s ease-in-out;
-        }
+        /* المعرض */
+        #main-content { display: none; width: 90%; max-width: 1200px; padding: 40px 0; }
+        .header { text-align: center; border-bottom: 1px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 40px; }
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .gallery-item { aspect-ratio: 1/1; overflow: hidden; border: 1px solid #1a1a1a; background: #111; }
+        .gallery img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); transition: 0.6s; }
+        .gallery-item:hover img { filter: grayscale(0%); transform: scale(1.08); }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .header {
-            text-align: center;
-            border-bottom: 1px solid #1a1a1a;
-            padding-bottom: 20px;
-            margin-bottom: 40px;
-        }
-
-        /* شبكة الصور */
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
-
-        .gallery-item {
-            aspect-ratio: 1 / 1;
-            overflow: hidden;
-            border: 1px solid #1a1a1a;
-            background: #111;
-        }
-
-        .gallery img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            filter: grayscale(100%);
-            transition: 0.6s ease;
-        }
-
-        .gallery-item:hover img {
-            filter: grayscale(0%);
-            transform: scale(1.08);
-        }
-
-        /* زر الرفع */
-        .upload-area {
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        #upload-btn {
-            background: #004d40;
-            color: #fff;
-            border: 1px solid #00796b;
+        /* إخفاء زر الرفع تماماً في البداية */
+        #upload-btn { 
+            display: none; 
+            background: #b71c1c; 
+            color: #fff; 
+            border: 1px solid #ff5252; 
+            margin: 20px auto;
             font-weight: bold;
-        }
-
-        @media (max-width: 600px) {
-            #login-screen { width: 85%; padding: 30px; }
-            .gallery { grid-template-columns: 1fr 1fr; gap: 10px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- شاشة الدخول -->
     <div id="login-screen">
         <h2>PRIVATE ACCESS</h2>
-        <p style="font-size: 0.8em; color: #444;">ENTER SECURITY KEY</p>
         <input type="password" id="passInput" placeholder="······" onkeypress="if(event.key==='Enter') unlock()">
         <br>
         <button onclick="unlock()">Login</button>
     </div>
 
-    <!-- المحتوى الرئيسي -->
     <div id="main-content">
         <div class="header">
             <h1>MY GALLERY</h1>
-            <p style="color: #555; font-style: italic;">"f.girly"</p>
-        </div>
-
-        <div class="upload-area">
-            <button id="upload-btn">➕ إضافة صورة جديدة من هاتفك</button>
+            <!-- زر الرفع الذي لن يظهر إلا لك -->
+            <button id="upload-btn">➕ لوحة تحكم المسؤول: إضافة صورة</button>
         </div>
         
         <div class="gallery" id="photo-gallery">
-            <!-- الصور التي سترفعها ستظهر هنا -->
-            <!-- صور افتراضية (اختياري) -->
+            <!-- الصور هنا -->
             <div class="gallery-item"><img src="1.jpg"></div>
-            <div class="gallery-item"><img src="2.jpg"></div>
         </div>
     </div>
 
     <script>
-        // دالة فتح الموقع
+        // 1. وظيفة التحقق من الرابط (هل أنت المسؤول؟)
+        function checkAdminStatus() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('admin') === 'true') {
+                document.getElementById("upload-btn").style.display = "block";
+            }
+        }
+
         function unlock() {
             const pass = document.getElementById("passInput").value;
             if (pass === "f.socity") { 
                 document.getElementById("login-screen").style.display = "none";
                 document.getElementById("main-content").style.display = "block";
-                document.body.style.display = "block"; // تغيير الـ flex ليعمل التمرير
+                checkAdminStatus(); // فحص هل يجب إظهار زر الرفع
             } else {
-                alert("رمز الدخول غير صحيح.");
+                alert("رمز الدخول خاطئ.");
             }
         }
 
-        // إعدادات الرفع الخاصة بك
+        // 2. إعدادات الرفع الخاصة بك
         const myWidget = cloudinary.createUploadWidget({
             cloudName: 'dm6sw4fb1', 
             uploadPreset: 'jalile.mh'
@@ -178,19 +85,13 @@
                 const gallery = document.getElementById("photo-gallery");
                 const newItem = document.createElement("div");
                 newItem.className = "gallery-item";
-                newItem.innerHTML = `<img src="${result.info.secure_url}" alt="New Photo">`;
-                
-                // إضافة الصورة في أول المعرض
+                newItem.innerHTML = `<img src="${result.info.secure_url}">`;
                 gallery.prepend(newItem); 
                 alert("تم رفع الصورة بنجاح!");
             }
         });
 
-        // ربط الزر بالـ Widget
-        document.getElementById("upload-btn").addEventListener("click", function(){
-            myWidget.open();
-        }, false);
+        document.getElementById("upload-btn").addEventListener("click", () => myWidget.open());
     </script>
-
 </body>
 </html>
