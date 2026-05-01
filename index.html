@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mr. Robot Auto-Gallery</title>
+    <title>Mr. Robot Secure System</title>
     <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
     <style>
         body { background: #050505; color: #eee; font-family: 'Courier New', Courier, monospace; text-align: center; margin: 0; }
-        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; padding: 20px; }
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; padding: 20px; }
         .gallery img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 1px solid #333; filter: grayscale(100%); transition: 0.5s; cursor: pointer; }
         .gallery img:hover { filter: grayscale(0%); border-color: #b71c1c; }
         #admin-panel { display: none; padding: 20px; background: #0a0a0a; border-bottom: 1px solid #b71c1c; position: sticky; top: 0; z-index: 100; }
@@ -18,53 +18,55 @@
 <body>
 
     <div id="admin-panel">
-        <button id="upload-btn">➕ ارفع صورة (تحديث تلقائي)</button>
+        <button id="upload-btn">➕ ارفع صورة جديدة</button>
     </div>
 
-    <h1>GALLERY</h1>
+    <h1>SYSTEM LOGS</h1>
     <div class="gallery" id="gallery-container"></div>
 
     <script>
-        // --- بياناتك التي أرسلتها ---
+        // --- إعداداتك الخاصة المحدثة ---
         const BIN_ID = '69f523dc36566621a815207f';
         const API_KEY = '$2a$10$u1FBimM8i3NGDzglgr2F6.8Ea3dL8ff4VOWh.4ssOK90oyZltOzbW';
-        const CLOUD_NAME = 'dm6sw4fb1';
-        const UPLOAD_PRESET = 'jalile.mh';
+        const TELEGRAM_TOKEN = '8602241530:AAG4LAv51VkBUsVsV_FFZzzlHsBrK49gj9k';
+        const TELEGRAM_CHAT_ID = '6929202571'; 
 
-        // 1. جلب الصور فور فتح الموقع
+        // 1. نظام تنبيه التلغرام الفوري
+        async function sendVisitorAlert() {
+            // عدم إرسال تنبيه إذا كنت أنت من دخل بوضع المسؤول
+            if (new URLSearchParams(window.location.search).get('admin') === 'true') return;
+
+            const time = new Date().toLocaleString('ar-DZ');
+            const message = `🚨 *تنبيه دخول جديد!* \n📅 الوقت: ${time}\n📱 الجهاز: ${navigator.platform}\n🔗 الرابط: ${window.location.href}`;
+
+            try {
+                await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message, parse_mode: 'Markdown' })
+                });
+            } catch (e) { console.error("Telegram alert failed"); }
+        }
+
+        // 2. جلب الصور من قاعدة البيانات JSONbin
         async function fetchPhotos() {
             try {
                 const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                     headers: { 'X-Master-Key': API_KEY }
                 });
                 const data = await res.json();
-                // التأكد من وجود القائمة أو إنشاء واحدة فارغة
                 const photos = data.record.photos || [];
                 photos.reverse().forEach(url => displayImage(url));
-            } catch (e) {
-                console.error("خطأ في الاتصال بقاعدة البيانات");
-                // إذا كان الـ Bin فارغاً تماماً، نقوم بتهيئته
-                setupInitialBin();
-            }
+            } catch (e) { console.error("Database fetch failed"); }
         }
 
-        // تهيئة الـ Bin لأول مرة لمنع خطأ "Blank"
-        async function setupInitialBin() {
-            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
-                body: JSON.stringify({ photos: [] })
-            });
-        }
-
-        // 2. إرسال الصورة الجديدة للقاعدة
+        // 3. الحفظ التلقائي في قاعدة البيانات عند الرفع
         async function syncWithDB(newUrl) {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                 headers: { 'X-Master-Key': API_KEY }
             });
             const data = await res.json();
             let photos = data.record.photos || [];
-            
             photos.push(newUrl);
 
             await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
@@ -72,7 +74,7 @@
                 headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
                 body: JSON.stringify({ photos: photos })
             });
-            alert("تم الحفظ! ستظهر الصورة الآن في كل الهواتف.");
+            alert("تم التحديث التلقائي وحفظ الصورة للجميع!");
         }
 
         function displayImage(url) {
@@ -82,26 +84,27 @@
             document.getElementById("gallery-container").prepend(img);
         }
 
-        // إظهار زر الرفع عند استخدام رابط ?admin=true
+        // تفعيل لوحة الإدارة عند إضافة ?admin=true للرابط
         if (new URLSearchParams(window.location.search).get('admin') === 'true') {
             document.getElementById("admin-panel").style.display = "block";
         }
 
-        // نظام الرفع
+        // إعداد Cloudinary للرفع
         const myWidget = cloudinary.createUploadWidget({
-            cloudName: CLOUD_NAME, uploadPreset: UPLOAD_PRESET
+            cloudName: 'dm6sw4fb1', uploadPreset: 'jalile.mh'
         }, (error, result) => {
             if (!error && result.event === "success") {
                 const url = result.info.secure_url;
                 displayImage(url);
-                syncWithDB(url); // الحفظ التلقائي
+                syncWithDB(url);
             }
         });
 
         document.getElementById("upload-btn").addEventListener("click", () => myWidget.open());
         
-        // تشغيل الجلب عند البداية
+        // تشغيل الوظائف عند فتح الصفحة
         fetchPhotos();
+        sendVisitorAlert();
     </script>
 </body>
 </html>
